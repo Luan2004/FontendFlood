@@ -74,10 +74,22 @@ const resTotalVehicles = document.getElementById("resTotalVehicles");
 const camerasGrid = document.getElementById("camerasGrid");
 const btnRefreshCameras = document.getElementById("btnRefreshCameras");
 
+// ============================================================================
+// CẤU HÌNH ĐƯỜNG LINK NGROK BACKEND CỐ ĐỊNH (NGROK STATIC DOMAIN)
+// ============================================================================
+// Bạn có thể điền link ngrok cố định của bạn vào đây (vd: https://flood-detection-ai.ngrok-free.app).
+// Khi đã có link cố định, Frontend tự động kết nối ngầm, người dùng không cần tự điền nữa.
+const FIXED_NGROK_URL = "https://flood-detection-ai.ngrok-free.app";
+
 // State
 let selectedFloodFile = null;
 let selectedTrafficFile = null;
+
+// Lấy URL đã lưu trong trình duyệt hoặc dùng FIXED_NGROK_URL làm mặc định
 let currentApiUrl = localStorage.getItem("FLOOD_API_URL") || "";
+if (!currentApiUrl && FIXED_NGROK_URL && !FIXED_NGROK_URL.includes("YOUR_DOMAIN_HERE")) {
+  currentApiUrl = FIXED_NGROK_URL;
+}
 
 // Sample Image base64 or public URLs
 const SAMPLE_FLOOD_URL = "https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=1000&q=80";
@@ -136,7 +148,6 @@ function initApp() {
   inputApiUrl.value = currentApiUrl;
   
   if (!currentApiUrl) {
-    showNoApiBanner();
     setBackendStatus("offline", "Chưa kết nối API");
   } else {
     hideNoApiBanner();
@@ -148,6 +159,18 @@ function initApp() {
 }
 
 function setupEventListeners() {
+  // Cho phép click vào badge trạng thái hoặc ấn Ctrl+Shift+K để mở modal cấu hình nếu cần
+  if (backendStatusBadge) {
+    backendStatusBadge.style.cursor = "pointer";
+    backendStatusBadge.title = "Click hoặc bấm Ctrl+Shift+K để xem cấu hình API Backend";
+    backendStatusBadge.addEventListener("click", openSettings);
+  }
+  window.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && (e.key === "K" || e.key === "k")) {
+      e.preventDefault();
+      openSettings();
+    }
+  });
   // Tabs switching
   tabButtons.forEach(btn => {
     btn.addEventListener("click", () => {
