@@ -60,6 +60,12 @@
 
       <!-- Right Controls: Backend Status & Settings -->
       <div class="flex items-center gap-3">
+        <!-- Nút Kích hoạt Kaggle GPU Tự Động -->
+        <button id="btnAutoStartKaggle" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-900 font-bold px-3 py-1.5 rounded-xl text-xs transition shadow-md shadow-orange-500/20" title="Bấm để kích hoạt Kaggle GPU tự động chạy">
+          <i class="fa-solid fa-bolt"></i>
+          <span id="btnAutoStartText">Bật Kaggle GPU</span>
+        </button>
+
         <!-- Backend Status Badge -->
         <div id="backendStatusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-800 border border-slate-700 text-slate-300 transition">
           <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="statusDot"></span>

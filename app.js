@@ -21,6 +21,10 @@ const btnTestApi = document.getElementById("btnTestApi");
 const btnSaveApi = document.getElementById("btnSaveApi");
 const testConnectionBox = document.getElementById("testConnectionBox");
 
+// DOM Elements - Kích hoạt Kaggle GPU Tự Động
+const btnAutoStartKaggle = document.getElementById("btnAutoStartKaggle");
+const btnAutoStartText = document.getElementById("btnAutoStartText");
+
 // DOM Elements - Tab 1: Flood
 const floodDropzone = document.getElementById("floodDropzone");
 const floodFileInput = document.getElementById("floodFileInput");
@@ -77,19 +81,14 @@ const btnRefreshCameras = document.getElementById("btnRefreshCameras");
 // ============================================================================
 // CẤU HÌNH ĐƯỜNG LINK NGROK BACKEND CỐ ĐỊNH (NGROK STATIC DOMAIN)
 // ============================================================================
-// Bạn có thể điền link ngrok cố định của bạn vào đây (vd: https://flood-detection-ai.ngrok-free.app).
-// Khi đã có link cố định, Frontend tự động kết nối ngầm, người dùng không cần tự điền nữa.
-const FIXED_NGROK_URL = "https://flood-detection-ai.ngrok-free.app";
+const FIXED_NGROK_URL = "https://hush-harmless-erased.ngrok-free.dev";
 
 // State
 let selectedFloodFile = null;
 let selectedTrafficFile = null;
 
-// Lấy URL đã lưu trong trình duyệt hoặc dùng FIXED_NGROK_URL làm mặc định
-let currentApiUrl = localStorage.getItem("FLOOD_API_URL") || "";
-if (!currentApiUrl && FIXED_NGROK_URL && !FIXED_NGROK_URL.includes("YOUR_DOMAIN_HERE")) {
-  currentApiUrl = FIXED_NGROK_URL;
-}
+// Lấy URL cố định làm mặc định
+let currentApiUrl = localStorage.getItem("FLOOD_API_URL") || FIXED_NGROK_URL;
 
 // Sample Image base64 or public URLs
 const SAMPLE_FLOOD_URL = "https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=1000&q=80";
@@ -171,6 +170,10 @@ function setupEventListeners() {
       openSettings();
     }
   });
+  if (btnAutoStartKaggle) {
+    btnAutoStartKaggle.addEventListener("click", autoStartKaggle);
+  }
+
   // Tabs switching
   tabButtons.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -315,13 +318,95 @@ function setBackendStatus(state, msg) {
   if (state === "online") {
     statusDot.classList.add("bg-emerald-400", "shadow-[0_0_8px_#34d399]");
     backendStatusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300";
+    if (btnAutoStartKaggle) btnAutoStartKaggle.classList.add("hidden");
   } else if (state === "checking") {
     statusDot.classList.add("bg-amber-400", "animate-ping");
     backendStatusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-500/10 border border-amber-500/30 text-amber-300";
   } else {
     statusDot.classList.add("bg-rose-400");
     backendStatusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-rose-500/10 border border-rose-500/30 text-rose-300";
+    if (btnAutoStartKaggle && !isStartingKaggle) btnAutoStartKaggle.classList.remove("hidden");
   }
+}
+
+// ============================================================================
+// KÍCH HOẠT KAGGLE GPU TỰ ĐỘNG QUA 1-CLICK
+// ============================================================================
+let isStartingKaggle = false;
+let pollingInterval = null;
+
+async function autoStartKaggle() {
+  if (isStartingKaggle) return;
+  isStartingKaggle = true;
+
+  btnAutoStartKaggle.disabled = true;
+  btnAutoStartText.textContent = "Đang gửi lệnh...";
+  setBackendStatus("checking", "Đang cấp phát GPU Kaggle...");
+
+  try {
+    const apiEndpoints = [
+      "/api/start-kaggle",
+      "https://fontend-flood.vercel.app/api/start-kaggle"
+    ];
+
+    for (const ep of apiEndpoints) {
+      try {
+        const res = await fetch(ep, { method: "POST" });
+        if (res.ok) break;
+      } catch (e) {
+        // Fallback endpoint tiếp theo
+      }
+    }
+
+    btnAutoStartText.textContent = "GPU đang nạp model (~1-2p)...";
+    setBackendStatus("checking", "Kaggle GPU đang khởi động...");
+
+    // Bắt đầu quét kết nối ngrok tự động mỗi 4s
+    if (pollingInterval) clearInterval(pollingInterval);
+    let attempts = 0;
+    pollingInterval = setInterval(async () => {
+      attempts++;
+      const isOnline = await pingBackend();
+      if (isOnline) {
+        clearInterval(pollingInterval);
+        isStartingKaggle = false;
+        if (btnAutoStartKaggle) btnAutoStartKaggle.classList.add("hidden");
+      } else if (attempts > 45) { // Timeout sau 3 phút
+        clearInterval(pollingInterval);
+        isStartingKaggle = false;
+        btnAutoStartKaggle.disabled = false;
+        btnAutoStartText.textContent = "Thử lại";
+        setBackendStatus("offline", "Kaggle chưa sẵn sàng");
+      }
+    }, 4000);
+
+  } catch (err) {
+    console.error("Auto start error:", err);
+    btnAutoStartKaggle.disabled = false;
+    btnAutoStartText.textContent = "Bật Kaggle GPU";
+    isStartingKaggle = false;
+  }
+}
+
+async function pingBackend() {
+  try {
+    const res = await fetch(`${currentApiUrl}/`, {
+      method: "GET",
+      headers: { "ngrok-skip-browser-warning": "true" }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.status === "online") {
+        const devName = data.device ? ` (${data.device})` : "";
+        setBackendStatus("online", `🟢 Kaggle GPU Online${devName}`);
+        fetchLiveCameras();
+        return true;
+      }
+    }
+  } catch (e) {
+    // Chưa online
+  }
+  return false;
 }
 
 function showNoApiBanner() { noApiBanner.classList.remove("hidden"); }
