@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌊 AI Urban Flood & Traffic Monitor | Hệ Thống Giám Sát Ngập Lụt & Giao Thông</title>
+  
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-blue-500 selection:text-white">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex justify-between items-center gap-4">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <i class="fa-solid fa-water text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-300 bg-clip-text text-transparent">
+              AI Urban Flood & Traffic
+            </h1>
+            <span class="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full font-semibold">v2.0</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">Giám sát Ngấn Nước Ngập Đô Thị & Ùn Tắc Giao Thông (Kaggle GPU + Vercel)</p>
+        </div>
+      </div>
+
+      <!-- Right Controls: Backend Status & Settings -->
+      <div class="flex items-center gap-3">
+        <!-- Backend Status Badge -->
+        <div id="backendStatusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-800 border border-slate-700 text-slate-300 transition">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="statusDot"></span>
+          <span id="statusText">Đang kiểm tra API...</span>
+        </div>
+
+        <!-- Settings Button -->
+        <button id="btnOpenSettings" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-200 transition shadow-sm">
+          <i class="fa-solid fa-sliders text-blue-400"></i>
+          <span class="hidden md:inline">Cấu hình Ngrok</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- TABS BAR -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-2 border-t border-slate-800/60 overflow-x-auto py-1 scrollbar-none">
+      <button class="tab-btn active" data-tab="tab-flood">
+        <i class="fa-solid fa-water-ladder text-blue-400 mr-2"></i> Đo Độ Sâu Nước Ngập
+      </button>
+      <button class="tab-btn" data-tab="tab-traffic">
+        <i class="fa-solid fa-car-side text-emerald-400 mr-2"></i> Giám Sát Dòng Giao Thông
+      </button>
+      <button class="tab-btn" data-tab="tab-hybrid">
+        <i class="fa-solid fa-layer-group text-purple-400 mr-2"></i> Phân Tích Lai Ghép (Hybrid)
+      </button>
+      <button class="tab-btn" data-tab="tab-cctv">
+        <i class="fa-solid fa-video text-amber-400 mr-2"></i> Camera Trực Tiếp Cần Thơ
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
+
+    <!-- ALERT BANNER KHI CHƯA CÓ NGROK URL -->
+    <div id="noApiBanner" class="hidden mb-6 bg-amber-500/10 border border-amber-500/30 text-amber-300 p-4 rounded-2xl flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-triangle-exclamation text-2xl text-amber-400"></i>
+        <div>
+          <h4 class="font-bold text-sm">Chưa kết nối Backend Kaggle GPU!</h4>
+          <p class="text-xs text-amber-200/80">Vui lòng khởi động notebook Kaggle và dán URL Ngrok vào để thực hiện nhận diện AI.</p>
+        </div>
+      </div>
+      <button id="btnBannerConfig" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-4 py-2 rounded-xl transition">
+        Cấu hình ngay
+      </button>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: ĐO ĐỘ SÂU NƯỚC NGẬP (FLOOD MONITORING)                       -->
+    <!-- =================================================================== -->
+    <section id="tab-flood" class="tab-content">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Cột Trái: Input & Image Upload (5/12) -->
+        <div class="lg:col-span-5 flex flex-col gap-4">
+          <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm">
+            <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center justify-between">
+              <span class="flex items-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-up text-blue-400"></i> Tải ảnh hiện trường ngập
+              </span>
+              <span class="text-[11px] text-slate-400 font-normal">YOLOv8s-seg + SCSG-Net</span>
+            </h3>
+
+            <!-- Dropzone -->
+            <div id="floodDropzone" class="dropzone-box">
+              <input type="file" id="floodFileInput" accept="image/*" class="hidden" />
+              
+              <div id="floodUploadPlaceholder" class="flex flex-col items-center gap-2 p-6 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-2xl">
+                  <i class="fa-solid fa-image"></i>
+                </div>
+                <p class="text-sm font-semibold text-slate-200">Kéo thả ảnh ngập vào đây</p>
+                <p class="text-xs text-slate-400">hoặc <span class="text-blue-400 underline cursor-pointer">chọn từ thiết bị</span> (hỗ trợ Ctrl+V dán ảnh)</p>
+              </div>
+
+              <div id="floodPreviewContainer" class="hidden relative w-full h-full min-h-[260px] flex items-center justify-center bg-black/40 rounded-xl overflow-hidden">
+                <img id="floodPreviewImg" class="max-h-72 w-auto object-contain" alt="Xem trước ảnh ngập" />
+                <button id="btnRemoveFloodImg" class="absolute top-2 right-2 bg-slate-900/80 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs transition border border-slate-700">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-4 flex gap-3">
+              <button id="btnAnalyzeFlood" disabled class="flex-1 btn-primary">
+                <i class="fa-solid fa-bolt-lightning"></i> Phân tích độ sâu ngập
+              </button>
+              <button id="btnSampleFlood" class="btn-secondary" title="Dùng ảnh mẫu ngập thực tế">
+                <i class="fa-solid fa-vial"></i> Ảnh mẫu
+              </button>
+            </div>
+          </div>
+
+          <!-- Thông tin tiêu chuẩn khoa học -->
+          <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-4 text-xs text-slate-400 flex flex-col gap-2">
+            <div class="flex items-center gap-2 text-slate-300 font-semibold">
+              <i class="fa-solid fa-circle-info text-blue-400"></i> Cơ chế đo lường thủy chuẩn
+            </div>
+            <p>Hệ thống kết hợp phân đoạn ngữ nghĩa mặt nước ngập (YOLOv8s-seg chuẩn màu Xanh Dương) và mốc thủy chuẩn bậc thang SCSG-Net tuân thủ tiêu chuẩn <strong>USGS TM 3-A7</strong> & <strong>ISO 4373:2022</strong>.</p>
+          </div>
+        </div>
+
+        <!-- Cột Phải: Visual Output & Telemetry (7/12) -->
+        <div class="lg:col-span-7 flex flex-col gap-4">
+          <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-xl flex-1 flex flex-col">
+            <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center justify-between">
+              <span class="flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-blue-400"></i> Kết quả nhận diện & Phân đoạn nước ngập
+              </span>
+              <span id="floodComputeTime" class="text-xs text-slate-400"></span>
+            </h3>
+
+            <!-- State 1: Chờ xử lý -->
+            <div id="floodEmptyState" class="flex-1 flex flex-col items-center justify-center p-10 text-slate-500 border border-dashed border-slate-700/60 rounded-xl min-h-[340px]">
+              <i class="fa-solid fa-water text-5xl mb-3 text-slate-600"></i>
+              <p class="text-sm">Tải ảnh lên và bấm <strong>Phân tích</strong> để xem mặt nạ nước và độ sâu.</p>
+            </div>
+
+            <!-- State 2: Đang xử lý -->
+            <div id="floodLoadingState" class="hidden flex-1 flex flex-col items-center justify-center p-10 text-center min-h-[340px]">
+              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <h4 class="text-base font-bold text-slate-200">Kaggle GPU đang tính toán...</h4>
+              <p class="text-xs text-slate-400 mt-1">Đang trích xuất mặt nạ nước YOLOv8s-seg và tối ưu điểm chuyển pha ranh giới nước</p>
+            </div>
+
+            <!-- State 3: Hiển thị kết quả -->
+            <div id="floodResultState" class="hidden flex-1 flex flex-col gap-4">
+              <!-- Visualized Result Image -->
+              <div class="relative bg-black rounded-xl overflow-hidden border border-slate-700 min-h-[300px] flex items-center justify-center">
+                <img id="floodResultImg" class="max-h-[460px] w-auto object-contain" alt="Kết quả phân đoạn nước ngập" />
+                <div class="absolute bottom-2 left-2 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-lg text-[11px] text-blue-300 border border-slate-700 flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-sm bg-[#1E90FF]"></span>
+                  <span>Mặt nạ nước (Water Segmentation Mask)</span>
+                </div>
+              </div>
+
+              <!-- Metrics Summary Cards -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- Card 1: Độ sâu đo được -->
+                <div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-xl flex flex-col justify-between">
+                  <span class="text-xs text-slate-400">Độ Sâu Ngập Đo Được</span>
+                  <div class="flex items-baseline gap-1 mt-1">
+                    <span id="resFloodDepth" class="text-3xl font-black text-blue-400">--</span>
+                    <span class="text-sm font-semibold text-slate-400">cm</span>
+                  </div>
+                  <span id="resFloodMethod" class="text-[11px] text-slate-500 mt-1">Mốc chuẩn SCSG-Net</span>
+                </div>
+
+                <!-- Card 2: Cấp độ cảnh báo -->
+                <div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-xl flex flex-col justify-between">
+                  <span class="text-xs text-slate-400">Cấp Độ Nguy Cơ</span>
+                  <div class="mt-1">
+                    <span id="resFloodAlertBadge" class="inline-block px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                      Đang xử lý
+                    </span>
+                  </div>
+                  <span id="resFloodAlertDesc" class="text-[11px] text-slate-400 mt-1">--</span>
+                </div>
+
+                <!-- Card 3: Tỷ lệ phủ nước -->
+                <div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-xl flex flex-col justify-between">
+                  <span class="text-xs text-slate-400">Độ Bao Phủ Mặt Nước</span>
+                  <div class="flex items-baseline gap-1 mt-1">
+                    <span id="resFloodCoverage" class="text-3xl font-black text-cyan-400">--</span>
+                    <span class="text-sm font-semibold text-slate-400">%</span>
+                  </div>
+                  <span class="text-[11px] text-slate-500 mt-1">Diện tích khung nhìn</span>
+                </div>
+              </div>
+
+              <!-- Khuyến cáo giao thông -->
+              <div id="resFloodAdviceBox" class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex items-start gap-3">
+                <i class="fa-solid fa-shield-halved text-blue-400 text-lg mt-0.5"></i>
+                <div>
+                  <h5 class="text-xs font-bold text-blue-300 uppercase tracking-wider">Khuyến cáo lưu thông an toàn:</h5>
+                  <p id="resFloodAdviceText" class="text-xs text-slate-300 mt-1 leading-relaxed">--</p>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: GIÁM SÁT DÒNG GIAO THÔNG (TRAFFIC CONGESTION)               -->
+    <!-- =================================================================== -->
+    <section id="tab-traffic" class="tab-content hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Cột Trái: Upload & Action (5/12) -->
+        <div class="lg:col-span-5 flex flex-col gap-4">
+          <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-xl">
+            <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center justify-between">
+              <span class="flex items-center gap-2">
+                <i class="fa-solid fa-car text-emerald-400"></i> Tải ảnh dòng xe giao thông
+              </span>
+              <span class="text-[11px] text-slate-400 font-normal">YOLOv8s + ByteTrack</span>
+            </h3>
+
+            <div id="trafficDropzone" class="dropzone-box">
+              <input type="file" id="trafficFileInput" accept="image/*" class="hidden" />
+              
+              <div id="trafficUploadPlaceholder" class="flex flex-col items-center gap-2 p-6 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-2xl">
+                  <i class="fa-solid fa-traffic-light"></i>
+                </div>
+                <p class="text-sm font-semibold text-slate-200">Kéo thả ảnh giao thông</p>
+                <p class="text-xs text-slate-400">hoặc <span class="text-emerald-400 underline cursor-pointer">chọn file</span></p>
+              </div>
+
+              <div id="trafficPreviewContainer" class="hidden relative w-full h-full min-h-[260px] flex items-center justify-center bg-black/40 rounded-xl overflow-hidden">
+                <img id="trafficPreviewImg" class="max-h-72 w-auto object-contain" alt="Xem trước ảnh xe" />
+                <button id="btnRemoveTrafficImg" class="absolute top-2 right-2 bg-slate-900/80 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs transition border border-slate-700">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-4 flex gap-3">
+              <button id="btnAnalyzeTraffic" disabled class="flex-1 btn-success">
+                <i class="fa-solid fa-chart-pie"></i> Phân tích lưu lượng & Ùn tắc
+              </button>
+              <button id="btnSampleTraffic" class="btn-secondary" title="Dùng ảnh mẫu xe cộ">
+                <i class="fa-solid fa-vial"></i> Ảnh mẫu
+              </button>
+            </div>
+          </div>
+
+          <!-- Thông tin tiêu chuẩn ITS -->
+          <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-4 text-xs text-slate-400 flex flex-col gap-2">
+            <div class="flex items-center gap-2 text-slate-300 font-semibold">
+              <i class="fa-solid fa-road text-emerald-400"></i> Tiêu chuẩn ITS & Năng lực đường bộ
+            </div>
+            <p>Hệ thống tự động quy đổi tải lượng xe con tương đương (<strong>PCU</strong> theo <strong>TCVN 4054:2005</strong>) và đánh giá Cấp độ phục vụ đường đô thị (<strong>Level of Service - LOS</strong> từ A đến F theo <strong>TRB HCM 2020</strong>).</p>
+          </div>
+        </div>
+
+        <!-- Cột Phải: Visual Output & Traffic Stats (7/12) -->
+        <div class="lg:col-span-7 flex flex-col gap-4">
+          <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-xl flex-1 flex flex-col">
+            <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center justify-between">
+              <span class="flex items-center gap-2">
+                <i class="fa-solid fa-chart-column text-emerald-400"></i> Báo cáo trạng thái giao thông
+              </span>
+              <span id="trafficComputeTime" class="text-xs text-slate-400"></span>
+            </h3>
+
+            <!-- Empty State -->
+            <div id="trafficEmptyState" class="flex-1 flex flex-col items-center justify-center p-10 text-slate-500 border border-dashed border-slate-700/60 rounded-xl min-h-[340px]">
+              <i class="fa-solid fa-car-tunnel text-5xl mb-3 text-slate-600"></i>
+              <p class="text-sm">Tải ảnh giao thông lên và bấm <strong>Phân tích</strong> để đếm xe và ước tính ùn tắc.</p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="trafficLoadingState" class="hidden flex-1 flex flex-col items-center justify-center p-10 text-center min-h-[340px]">
+              <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <h4 class="text-base font-bold text-slate-200">Kaggle GPU đang xử lý YOLOv8s...</h4>
+              <p class="text-xs text-slate-400 mt-1">Đang phân loại xe máy, ô tô, xe tải, xe buýt và tính toán mật độ PCU</p>
+            </div>
+
+            <!-- Result State -->
+            <div id="trafficResultState" class="hidden flex-1 flex flex-col gap-4">
+              <!-- Visualized Image -->
+              <div class="relative bg-black rounded-xl overflow-hidden border border-slate-700 min-h-[300px] flex items-center justify-center">
+                <img id="trafficResultImg" class="max-h-[460px] w-auto object-contain" alt="Kết quả nhận diện phương tiện" />
+              </div>
+
+              <!-- Vehicle Class Counts -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-slate-900/60 border border-slate-700/60 p-3 rounded-xl text-center">
+                  <div class="text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-motorcycle text-cyan-400"></i> Xe máy
+                  </div>
+                  <div id="cntMotorbike" class="text-2xl font-bold text-slate-100 mt-1">0</div>
+                </div>
+
+                <div class="bg-slate-900/60 border border-slate-700/60 p-3 rounded-xl text-center">
+                  <div class="text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-car text-blue-400"></i> Ô tô con
+                  </div>
+                  <div id="cntCar" class="text-2xl font-bold text-slate-100 mt-1">0</div>
+                </div>
+
+                <div class="bg-slate-900/60 border border-slate-700/60 p-3 rounded-xl text-center">
+                  <div class="text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-truck text-amber-400"></i> Xe tải
+                  </div>
+                  <div id="cntTruck" class="text-2xl font-bold text-slate-100 mt-1">0</div>
+                </div>
+
+                <div class="bg-slate-900/60 border border-slate-700/60 p-3 rounded-xl text-center">
+                  <div class="text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-bus text-purple-400"></i> Xe buýt
+                  </div>
+                  <div id="cntBus" class="text-2xl font-bold text-slate-100 mt-1">0</div>
+                </div>
+              </div>
+
+              <!-- LOS & PCU Cards -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span class="text-xs text-slate-400">Cấp Độ Phục Vụ (LOS - HCM 2020)</span>
+                    <h4 id="resLosTitle" class="text-xl font-extrabold text-emerald-400 mt-0.5">LOS B - Lưu thông tốt</h4>
+                    <p id="resLosDesc" class="text-xs text-slate-400 mt-1">Dòng xe thông suốt ổn định</p>
+                  </div>
+                  <div id="resLosBadge" class="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-xl font-black">
+                    B
+                  </div>
+                </div>
+
+                <div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span class="text-xs text-slate-400">Tải Lượng Quy Đổi (PCU)</span>
+                    <div class="flex items-baseline gap-1 mt-0.5">
+                      <span id="resPcuScore" class="text-2xl font-extrabold text-cyan-400">0.0</span>
+                      <span class="text-xs text-slate-500">xe con tiêu chuẩn</span>
+                    </div>
+                    <p id="resTotalVehicles" class="text-xs text-slate-400 mt-1">Tổng cộng: 0 phương tiện</p>
+                  </div>
+                  <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-gauge-high"></i>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: PHÂN TÍCH LAI GHÉP (HYBRID DEPTH & TRAFFIC)                 -->
+    <!-- =================================================================== -->
+    <section id="tab-hybrid" class="tab-content hidden">
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 shadow-xl text-center max-w-2xl mx-auto">
+        <div class="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-400 flex items-center justify-center text-3xl mx-auto mb-4">
+          <i class="fa-solid fa-microchip"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-100">Động Cơ Lai Ghép Thích Ứng (Adaptive Hybrid Arbiter)</h3>
+        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+          Tích hợp đồng thời đo lường ngấn nước ngập qua vạch bánh xe ô tô chìm trong nước và hiệu chỉnh chênh cao cốt đường vỉa hè, cung cấp báo cáo thủy văn & giao thông toàn diện trong một khung hình duy nhất.
+        </p>
+        
+        <div class="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+          <button onclick="document.querySelector('[data-tab=tab-flood]').click()" class="btn-primary">
+            <i class="fa-solid fa-water"></i> Chuyển sang Đo Ngập Lụt
+          </button>
+          <button onclick="document.querySelector('[data-tab=tab-traffic]').click()" class="btn-success">
+            <i class="fa-solid fa-car"></i> Chuyển sang Giám Sát Giao Thông
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: CAMERA TRỰC TIẾP CẦN THƠ (LIVE CCTV)                        -->
+    <!-- =================================================================== -->
+    <section id="tab-cctv" class="tab-content hidden">
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-800/60 border border-slate-700/60 p-4 rounded-2xl">
+          <div>
+            <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-tower-broadcast text-amber-400"></i> Mạng Lưới Camera Giao Thông & Ngập Lụt Cần Thơ
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Kết nối trực tiếp luồng RTSP / Live Stream các tuyến đường trọng điểm</p>
+          </div>
+          <button id="btnRefreshCameras" class="btn-secondary text-xs">
+            <i class="fa-solid fa-arrows-rotate"></i> Làm mới danh sách
+          </button>
+        </div>
+
+        <!-- Grid of Cameras -->
+        <div id="camerasGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Will be rendered dynamically via app.js -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: CẤU HÌNH API NGROK -->
+  <div id="settingsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+      
+      <div class="flex justify-between items-start mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-lg border border-blue-500/30">
+            <i class="fa-solid fa-network-wired"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-100">Cấu hình Kaggle Ngrok Backend</h3>
+            <p class="text-xs text-slate-400">Kết nối Vercel Frontend tới Kaggle GPU API</p>
+          </div>
+        </div>
+        <button id="btnCloseSettings" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Ngrok Public URL (FastAPI)</label>
+          <div class="relative">
+            <input type="url" id="inputApiUrl" placeholder="https://xxxx-xx-xx.ngrok-free.app" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-500" />
+            <button id="btnPasteUrl" class="absolute right-2 top-2 px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-[11px] text-slate-300 font-medium transition" title="Dán từ Clipboard">
+              Dán
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Copy đường link Ngrok được in ra tại cell cuối cùng của notebook Kaggle và dán vào đây.</p>
+        </div>
+
+        <!-- Connection Test Result -->
+        <div id="testConnectionBox" class="hidden p-3 rounded-xl border text-xs"></div>
+
+        <div class="bg-slate-800/60 border border-slate-700/60 p-3.5 rounded-xl text-xs text-slate-400 space-y-1">
+          <div class="font-semibold text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-lightbulb text-amber-400"></i> Mẹo hoạt động vĩnh viễn:
+          </div>
+          <p>• URL được lưu vào trình duyệt của bạn (LocalStorage), không cần deploy lại Vercel khi đổi link Ngrok.</p>
+          <p>• Nếu dùng Ngrok Static Domain miễn phí (vd: <code>flood-ai.ngrok-free.app</code>), URL sẽ cố định vĩnh viễn.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button id="btnTestApi" class="btn-secondary text-xs">
+          <i class="fa-solid fa-plug"></i> Kiểm tra kết nối
+        </button>
+        <button id="btnSaveApi" class="btn-primary text-xs">
+          <i class="fa-solid fa-floppy-disk"></i> Lưu và Áp dụng
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <p>© 2026 AI Urban Flood & Traffic Monitoring System | SYNEXAN & Luan2004</p>
+      <div class="flex items-center gap-4 text-slate-400">
+        <a href="https://github.com/Luan2004/FontendFlood" target="_blank" class="hover:text-blue-400 transition flex items-center gap-1">
+          <i class="fa-brands fa-github"></i> GitHub Frontend
+        </a>
+        <a href="https://www.kaggle.com/code/nguynvlun/floodkaggleapi" target="_blank" class="hover:text-blue-400 transition flex items-center gap-1">
+          <i class="fa-solid fa-cube"></i> Kaggle Notebook
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
