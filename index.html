@@ -49,7 +49,7 @@
       height: 100%;
       border: none;
       display: block;
-      background: #ffffff;
+      background: var(--bg-dark);
     }
 
     /* Floating Top Bar (Controls over Iframe) */
@@ -824,22 +824,36 @@
     }
 
     // ========================================================================
-    // KIỂM TRA ONLINE BACKEND NGROK
+    // KIỂM TRA ONLINE BACKEND NGROK & KAGGLE GPU
     // ========================================================================
     async function checkBackendOnline() {
-      const config = getConfig();
-      try {
-        await fetch(`${config.ngrok}/`, {
-          mode: "no-cors",
-          headers: { "ngrok-skip-browser-warning": "true" }
-        });
-        updateStatusUI("online", "Model GPU Online (Tesla T4)");
-        hideOverlay();
-        return true;
-      } catch (e) {}
+      if (isExecutingKernel) return;
 
-      if (!isExecutingKernel) {
-        // updateStatusUI("offline", "Model GPU: Offline");
+      const config = getConfig();
+      if (!config.token) return;
+
+      try {
+        const res = await fetch("https://api.kaggle.com/v1/kernels.KernelsApiService/GetKernelSessionStatus", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${config.token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ userName: config.user, kernelSlug: config.slug })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "RUNNING") {
+            updateStatusUI("online", "Model GPU Online (Tesla T4)");
+            return true;
+          } else {
+            updateStatusUI("offline", "Model GPU: Offline");
+            showOverlay();
+            return false;
+          }
+        }
+      } catch (e) {
+        console.warn("Status check error:", e);
       }
       return false;
     }
