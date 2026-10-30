@@ -281,6 +281,17 @@ LIVE_STREAM_STATE = {
     "veh_conf": 0.35,
 }
 
+DEFAULT_FUSION_STATE = {
+    "source_type": "video",
+    "video_path": DEFAULT_GAUGE_VIDEO,
+    "cam_source": None,
+    "cam_title": "Video mặc định",
+    "total_frames": INIT_TOTAL_FRAMES,
+    "fps": INIT_FPS,
+    "current_frame_idx": 0,
+    "base_frame": extract_video_frame(DEFAULT_GAUGE_VIDEO, 0) if DEFAULT_GAUGE_VIDEO else None,
+}
+
 
 def stop_live_stream():
     """Ngắt tức thời mọi vòng lặp phát video / camera AI đang chạy."""
