@@ -1,0 +1,12 @@
+gradio>=4.40.0
+pydantic==2.10.6
+huggingface_hub<1.0.0
+ultralytics>=8.2.0
+opencv-python-headless>=4.8.0
+numpy>=1.24.0
+pandas>=2.0.0
+pillow>=10.0.0
+torch>=2.0.0
+torchvision
+yt-dlp
+lapx>=0.5.5
