@@ -374,8 +374,9 @@ async function autoStartKaggle() {
 
   btnAutoStartKaggle.disabled = true;
   btnAutoStartText.textContent = "Đang gửi lệnh...";
-  setBackendStatus("checking", "Đang cấp phát GPU Kaggle...");
+  setBackendStatus("checking", "Đang khởi động Kaggle GPU...");
 
+  let triggered = false;
   try {
     const apiEndpoints = [
       "/api/start-kaggle",
@@ -385,40 +386,45 @@ async function autoStartKaggle() {
     for (const ep of apiEndpoints) {
       try {
         const res = await fetch(ep, { method: "POST" });
-        if (res.ok) break;
+        if (res.ok) {
+          triggered = true;
+          break;
+        }
       } catch (e) {
-        // Fallback endpoint tiếp theo
+        // Tiếp tục thử fallback
       }
     }
-
-    btnAutoStartText.textContent = "GPU đang nạp model (~1-2p)...";
-    setBackendStatus("checking", "Kaggle GPU đang khởi động...");
-
-    // Bắt đầu quét kết nối ngrok tự động mỗi 4s
-    if (pollingInterval) clearInterval(pollingInterval);
-    let attempts = 0;
-    pollingInterval = setInterval(async () => {
-      attempts++;
-      const isOnline = await pingBackend();
-      if (isOnline) {
-        clearInterval(pollingInterval);
-        isStartingKaggle = false;
-        if (btnAutoStartKaggle) btnAutoStartKaggle.classList.add("hidden");
-      } else if (attempts > 45) { // Timeout sau 3 phút
-        clearInterval(pollingInterval);
-        isStartingKaggle = false;
-        btnAutoStartKaggle.disabled = false;
-        btnAutoStartText.textContent = "Thử lại";
-        setBackendStatus("offline", "Kaggle chưa sẵn sàng");
-      }
-    }, 4000);
-
   } catch (err) {
-    console.error("Auto start error:", err);
-    btnAutoStartKaggle.disabled = false;
-    btnAutoStartText.textContent = "Bật Kaggle GPU";
-    isStartingKaggle = false;
+    console.warn("Lỗi gọi Serverless API:", err);
   }
+
+  // Nếu chạy trên GitHub Pages tĩnh (không có Serverless Backend)
+  if (!triggered) {
+    const kaggleUrl = "https://www.kaggle.com/code/nguynvlun/floodkaggleapi";
+    window.open(kaggleUrl, "_blank");
+  }
+
+  btnAutoStartText.textContent = "GPU đang nạp model (~30-60s)...";
+  setBackendStatus("checking", "Đang chờ Kaggle GPU kết nối...");
+
+  // Bắt đầu quét kết nối ngrok tự động mỗi 3s
+  if (pollingInterval) clearInterval(pollingInterval);
+  let attempts = 0;
+  pollingInterval = setInterval(async () => {
+    attempts++;
+    const isOnline = await pingBackend();
+    if (isOnline) {
+      clearInterval(pollingInterval);
+      isStartingKaggle = false;
+      if (btnAutoStartKaggle) btnAutoStartKaggle.classList.add("hidden");
+    } else if (attempts > 50) { // Timeout sau 2.5 phút
+      clearInterval(pollingInterval);
+      isStartingKaggle = false;
+      btnAutoStartKaggle.disabled = false;
+      btnAutoStartText.textContent = "Bật Kaggle GPU";
+      setBackendStatus("offline", "Kaggle chưa sẵn sàng");
+    }
+  }, 3000);
 }
 
 async function pingBackend() {
