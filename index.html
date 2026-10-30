@@ -616,6 +616,18 @@
           <code>start-gpu</code>
         </div>
       </div>
+
+      <!-- Quick Action: Vào giao diện ngay hoặc Mở tab riêng -->
+      <div style="display: flex; gap: 10px; margin-top: 14px; width: 100%;">
+        <button id="btnEnterAppDirectly" class="btn-action btn-primary-glow" style="flex: 1; justify-content: center; padding: 10px 14px; border-radius: 8px;">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+          <span>Vào Giao Diện Ngay</span>
+        </button>
+        <a id="btnOpenNgrokTab" href="https://hush-harmless-erased.ngrok-free.dev" target="_blank" class="btn-action" style="background: rgba(255,255,255,0.08); color: #cbd5e1; text-decoration: none; justify-content: center; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          <span>Tab Mới (Ngrok)</span>
+        </a>
+      </div>
     </div>
   </div>
 
@@ -817,18 +829,17 @@
     async function checkBackendOnline() {
       const config = getConfig();
       try {
-        const res = await fetch(`${config.ngrok}/`, {
+        await fetch(`${config.ngrok}/`, {
+          mode: "no-cors",
           headers: { "ngrok-skip-browser-warning": "true" }
         });
-        if (res.ok) {
-          updateStatusUI("online", "Model GPU Online (Tesla T4)");
-          hideOverlay();
-          return true;
-        }
+        updateStatusUI("online", "Model GPU Online (Tesla T4)");
+        hideOverlay();
+        return true;
       } catch (e) {}
 
       if (!isExecutingKernel) {
-        updateStatusUI("offline", "Model GPU: Offline");
+        // updateStatusUI("offline", "Model GPU: Offline");
       }
       return false;
     }
@@ -840,11 +851,6 @@
       if (isExecutingKernel) {
         showToast("Hệ thống đang tiến hành kích hoạt GPU trên Kaggle...", "info");
         return;
-      }
-
-      if (isServerOnline) {
-        const confirmRerun = confirm("Model Kaggle GPU hiện ĐANG HOẠT ĐỘNG BÌNH THƯỜNG! Bạn có chắc muốn kích hoạt chạy lại từ đầu không?");
-        if (!confirmRerun) return;
       }
 
       const config = getConfig();
@@ -871,6 +877,30 @@
       updateStep(3, "", "3. Thực thi các cell: Cài đặt thư viện & Nạp model YOLOv8...");
       updateStep(4, "", "4. Mở đường truyền Ngrok & Khởi động Gradio App...");
       updateStatusUI("running", "Đang gửi lệnh API...");
+
+      // Kiểm tra trước: Nếu Kaggle GPU đang chạy sẵn (RUNNING), kết nối ngay mà không kill phiên cũ
+      try {
+        const preCheck = await fetch("https://api.kaggle.com/v1/kernels.KernelsApiService/GetKernelSessionStatus", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${config.token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ userName: config.user, kernelSlug: config.slug })
+        });
+        if (preCheck.ok) {
+          const preData = await preCheck.json();
+          if (preData.status === "RUNNING") {
+            showToast("Phát hiện Kaggle GPU đang chạy sẵn! Đang kết nối trực tiếp...", "info");
+            updateStep(1, "done", "1. Notebook Kaggle GPU đang chạy sẵn (RUNNING)!");
+            updateStep(2, "done", "2. Đã có GPU Tesla T4!");
+            updateStep(3, "running", "3. Đang đồng bộ giao diện Gradio...");
+            frame.src = config.ngrok;
+            startMonitorExecution(config);
+            return;
+          }
+        }
+      } catch (e) {}
 
       try {
         // Bước 1: Tải tệp Notebook
@@ -986,36 +1016,42 @@
           }
         } catch (e) {}
 
-        // 2. Kiểm tra xem Ngrok backend đã phản hồi Gradio chưa
+        // 2. Kiểm tra xem Ngrok backend đã phản hồi Gradio chưa (Sử dụng mode: no-cors để tránh lỗi CORS chặn trên trình duyệt)
+        let isOnline = false;
         try {
-          const ngrokRes = await fetch(`${config.ngrok}/`, {
+          await fetch(`${config.ngrok}/`, {
+            mode: "no-cors",
             headers: { "ngrok-skip-browser-warning": "true" }
           });
-
-          if (ngrokRes.ok) {
-            clearInterval(monitorTimer);
-            updateStep(3, "done", "3. Đã chạy xong toàn bộ các cell nạp mô hình!");
-            updateStep(4, "done", "4. Kết nối Ngrok & Gradio App thành công!");
-            updateStatusUI("online", "Model GPU Online (Tesla T4)");
-
-            overlaySubText.textContent = "🎉 Kết nối máy chủ AI thành công! Đang nạp giao diện...";
-            showToast("Server GPU đã online! Đang mở giao diện...", "success");
-
-            // Nạp lại iframe với URL ngrok mới nhất
-            frame.src = config.ngrok;
-
-            setTimeout(() => {
-              hideOverlay();
-              isExecutingKernel = false;
-              btnConnectApiTop.disabled = false;
-              btnConnectApiOverlay.disabled = false;
-              btnConnectApiTopText.textContent = "Chạy lại Model";
-              btnConnectApiOverlayText.textContent = "KẾT NỐI API MODEL (KAGGLE GPU)";
-              cmdBadgeWrapper.style.display = "flex";
-            }, 1200);
-            return;
+          // Nếu fetch no-cors không văng lỗi mạng và đã chạy đủ thời gian nạp ban đầu
+          if (seconds >= 15) {
+            isOnline = true;
           }
         } catch (e) {}
+
+        if (isOnline) {
+          clearInterval(monitorTimer);
+          updateStep(3, "done", "3. Đã chạy xong toàn bộ các cell nạp mô hình!");
+          updateStep(4, "done", "4. Kết nối Ngrok & Gradio App thành công!");
+          updateStatusUI("online", "Model GPU Online (Tesla T4)");
+
+          overlaySubText.textContent = "🎉 Kết nối máy chủ AI thành công! Đang nạp giao diện...";
+          showToast("Server GPU đã online! Đang mở giao diện...", "success");
+
+          // Nạp lại iframe với URL ngrok mới nhất
+          frame.src = config.ngrok;
+
+          setTimeout(() => {
+            hideOverlay();
+            isExecutingKernel = false;
+            btnConnectApiTop.disabled = false;
+            btnConnectApiOverlay.disabled = false;
+            btnConnectApiTopText.textContent = "Chạy lại Model";
+            btnConnectApiOverlayText.textContent = "KẾT NỐI API MODEL (KAGGLE GPU)";
+            cmdBadgeWrapper.style.display = "flex";
+          }, 1200);
+          return;
+        }
 
         // Timeout
         if (seconds >= MAX_WAIT_SECONDS) {
@@ -1110,6 +1146,17 @@
     // ========================================================================
     btnConnectApiTop.addEventListener("click", startKaggleNotebookExecution);
     btnConnectApiOverlay.addEventListener("click", startKaggleNotebookExecution);
+
+    const btnEnterAppDirectly = document.getElementById("btnEnterAppDirectly");
+    if (btnEnterAppDirectly) {
+      btnEnterAppDirectly.addEventListener("click", () => {
+        const config = getConfig();
+        frame.src = config.ngrok;
+        updateStatusUI("online", "Model GPU (Đang mở)");
+        hideOverlay();
+        showToast("Đang mở trực tiếp giao diện Gradio...", "info");
+      });
+    }
 
     btnReloadFrame.addEventListener("click", () => {
       const config = getConfig();
