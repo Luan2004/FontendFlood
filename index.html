@@ -60,14 +60,8 @@
 
       <!-- Right Controls: Backend Status & Settings -->
       <div class="flex items-center gap-3">
-        <!-- Nút Kích hoạt Kaggle GPU Tự Động -->
-        <button id="btnAutoStartKaggle" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-900 font-bold px-3 py-1.5 rounded-xl text-xs transition shadow-md shadow-orange-500/20" title="Bấm để kích hoạt Kaggle GPU tự động chạy">
-          <i class="fa-solid fa-bolt"></i>
-          <span id="btnAutoStartText">Bật Kaggle GPU</span>
-        </button>
-
         <!-- Backend Status Badge -->
-        <div id="backendStatusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-800 border border-slate-700 text-slate-300 transition">
+        <div id="backendStatusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-800 border border-slate-700 text-slate-300 transition cursor-pointer" title="Trạng thái kết nối máy chủ GPU Kaggle">
           <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="statusDot"></span>
           <span id="statusText">Đang kiểm tra API...</span>
         </div>
@@ -107,12 +101,9 @@
         <i class="fa-solid fa-triangle-exclamation text-2xl text-amber-400"></i>
         <div>
           <h4 class="font-bold text-sm">Chưa kết nối Backend Kaggle GPU!</h4>
-          <p class="text-xs text-amber-200/80">Vui lòng khởi động notebook Kaggle và dán URL Ngrok vào để thực hiện nhận diện AI.</p>
+          <p class="text-xs text-amber-200/80">Vui lòng mở terminal và gõ lệnh <code class="px-2 py-0.5 bg-slate-800 rounded text-amber-300 font-mono">start-gpu</code> (hoặc <code class="px-2 py-0.5 bg-slate-800 rounded text-amber-300 font-mono">./start_kaggle_gpu.sh</code>) để khởi động server GPU.</p>
         </div>
       </div>
-      <button id="btnBannerConfig" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-4 py-2 rounded-xl transition">
-        Cấu hình ngay
-      </button>
     </div>
 
     <!-- =================================================================== -->
@@ -527,6 +518,6 @@
     </div>
   </footer>
 
-  <script src="app.js?v=20261030_04"></script>
+  <script src="app.js?v=20261030_05"></script>
 </body>
 </html>

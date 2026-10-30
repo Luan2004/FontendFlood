@@ -21,10 +21,6 @@ const btnTestApi = document.getElementById("btnTestApi");
 const btnSaveApi = document.getElementById("btnSaveApi");
 const testConnectionBox = document.getElementById("testConnectionBox");
 
-// DOM Elements - Kích hoạt Kaggle GPU Tự Động
-const btnAutoStartKaggle = document.getElementById("btnAutoStartKaggle");
-const btnAutoStartText = document.getElementById("btnAutoStartText");
-
 // DOM Elements - Tab 1: Flood
 const floodDropzone = document.getElementById("floodDropzone");
 const floodFileInput = document.getElementById("floodFileInput");
@@ -177,9 +173,6 @@ function setupEventListeners() {
       openSettings();
     }
   });
-  if (btnAutoStartKaggle) {
-    btnAutoStartKaggle.addEventListener("click", autoStartKaggle);
-  }
 
   // Tabs switching
   tabButtons.forEach(btn => {
@@ -351,80 +344,13 @@ function setBackendStatus(state, msg) {
   if (state === "online") {
     statusDot.classList.add("bg-emerald-400", "shadow-[0_0_8px_#34d399]");
     backendStatusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300";
-    if (btnAutoStartKaggle) btnAutoStartKaggle.classList.add("hidden");
   } else if (state === "checking") {
     statusDot.classList.add("bg-amber-400", "animate-ping");
     backendStatusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-500/10 border border-amber-500/30 text-amber-300";
   } else {
     statusDot.classList.add("bg-rose-400");
     backendStatusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-rose-500/10 border border-rose-500/30 text-rose-300";
-    if (btnAutoStartKaggle && !isStartingKaggle) btnAutoStartKaggle.classList.remove("hidden");
   }
-}
-
-// ============================================================================
-// KÍCH HOẠT KAGGLE GPU TỰ ĐỘNG QUA 1-CLICK
-// ============================================================================
-let isStartingKaggle = false;
-let pollingInterval = null;
-
-async function autoStartKaggle() {
-  if (isStartingKaggle) return;
-  isStartingKaggle = true;
-
-  btnAutoStartKaggle.disabled = true;
-  btnAutoStartText.textContent = "Đang gửi lệnh...";
-  setBackendStatus("checking", "Đang khởi động Kaggle GPU...");
-
-  let triggered = false;
-  try {
-    const apiEndpoints = [
-      "/api/start-kaggle",
-      "https://fontend-flood.vercel.app/api/start-kaggle"
-    ];
-
-    for (const ep of apiEndpoints) {
-      try {
-        const res = await fetch(ep, { method: "POST" });
-        if (res.ok) {
-          triggered = true;
-          break;
-        }
-      } catch (e) {
-        // Tiếp tục thử fallback
-      }
-    }
-  } catch (err) {
-    console.warn("Lỗi gọi Serverless API:", err);
-  }
-
-  // Nếu chạy trên GitHub Pages tĩnh (không có Serverless Backend)
-  if (!triggered) {
-    const kaggleUrl = "https://www.kaggle.com/code/nguynvlun/floodkaggleapi";
-    window.open(kaggleUrl, "_blank");
-  }
-
-  btnAutoStartText.textContent = "GPU đang nạp model (~30-60s)...";
-  setBackendStatus("checking", "Đang chờ Kaggle GPU kết nối...");
-
-  // Bắt đầu quét kết nối ngrok tự động mỗi 3s
-  if (pollingInterval) clearInterval(pollingInterval);
-  let attempts = 0;
-  pollingInterval = setInterval(async () => {
-    attempts++;
-    const isOnline = await pingBackend();
-    if (isOnline) {
-      clearInterval(pollingInterval);
-      isStartingKaggle = false;
-      if (btnAutoStartKaggle) btnAutoStartKaggle.classList.add("hidden");
-    } else if (attempts > 50) { // Timeout sau 2.5 phút
-      clearInterval(pollingInterval);
-      isStartingKaggle = false;
-      btnAutoStartKaggle.disabled = false;
-      btnAutoStartText.textContent = "Bật Kaggle GPU";
-      setBackendStatus("offline", "Kaggle chưa sẵn sàng");
-    }
-  }, 3000);
 }
 
 async function pingBackend() {
