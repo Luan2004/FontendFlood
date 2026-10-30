@@ -87,8 +87,15 @@ const FIXED_NGROK_URL = "https://hush-harmless-erased.ngrok-free.dev";
 let selectedFloodFile = null;
 let selectedTrafficFile = null;
 
+// Tự động dọn dẹp các URL ngrok cũ hoặc không hợp lệ từng lưu trong localStorage
+let savedUrl = localStorage.getItem("FLOOD_API_URL");
+if (!savedUrl || (savedUrl.includes("ngrok") && savedUrl !== FIXED_NGROK_URL)) {
+  savedUrl = FIXED_NGROK_URL;
+  localStorage.setItem("FLOOD_API_URL", FIXED_NGROK_URL);
+}
+
 // Lấy URL cố định làm mặc định
-let currentApiUrl = localStorage.getItem("FLOOD_API_URL") || FIXED_NGROK_URL;
+let currentApiUrl = savedUrl || FIXED_NGROK_URL;
 
 // Sample Image base64 or public URLs
 const SAMPLE_FLOOD_URL = "https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=1000&q=80";
@@ -246,8 +253,8 @@ function setupEventListeners() {
 // 2. BACKEND CONNECTION & HEALTH CHECK
 // ============================================================================
 async function checkBackendHealth() {
-  if (!currentApiUrl) return;
-  setBackendStatus("checking", "Đang kết nối...");
+  if (!currentApiUrl) currentApiUrl = FIXED_NGROK_URL;
+  setBackendStatus("checking", "Đang kết nối Kaggle GPU...");
 
   try {
     const start = performance.now();
@@ -259,16 +266,42 @@ async function checkBackendHealth() {
 
     if (res.ok) {
       const data = await res.json();
-      const devName = data.device ? ` (${data.device})` : "";
-      setBackendStatus("online", `🟢 Kaggle GPU Online${devName} [${latency}ms]`);
-      hideNoApiBanner();
-      fetchLiveCameras();
-    } else {
-      setBackendStatus("error", `Lỗi HTTP ${res.status}`);
+      if (data && data.status === "online") {
+        const devName = data.device ? ` (${data.device})` : "";
+        setBackendStatus("online", `🟢 Kaggle GPU Online${devName} [${latency}ms]`);
+        hideNoApiBanner();
+        fetchLiveCameras();
+        return;
+      }
     }
   } catch (err) {
-    setBackendStatus("offline", "Kaggle Offline");
+    console.warn(`Lỗi kết nối tới ${currentApiUrl}:`, err);
   }
+
+  // Nếu URL hiện tại thất bại mà khác FIXED_NGROK_URL, tự động fallback sang FIXED_NGROK_URL
+  if (currentApiUrl !== FIXED_NGROK_URL) {
+    try {
+      const resFixed = await fetch(`${FIXED_NGROK_URL}/`, {
+        method: "GET",
+        headers: { "ngrok-skip-browser-warning": "true" }
+      });
+      if (resFixed.ok) {
+        const data = await resFixed.json();
+        if (data && data.status === "online") {
+          currentApiUrl = FIXED_NGROK_URL;
+          localStorage.setItem("FLOOD_API_URL", FIXED_NGROK_URL);
+          if (inputApiUrl) inputApiUrl.value = FIXED_NGROK_URL;
+          const devName = data.device ? ` (${data.device})` : "";
+          setBackendStatus("online", `🟢 Kaggle GPU Online${devName}`);
+          hideNoApiBanner();
+          fetchLiveCameras();
+          return;
+        }
+      }
+    } catch (e2) {}
+  }
+
+  setBackendStatus("offline", "Kaggle Offline");
 }
 
 async function testConnection() {
