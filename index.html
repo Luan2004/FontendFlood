@@ -369,7 +369,7 @@
       font-weight: 600;
     }
 
-    /* Modal: Cấu hình Kaggle & API */
+    /* Modal: Cấu hình API Model */
     #settings-modal {
       position: fixed;
       inset: 0;
@@ -548,24 +548,24 @@
   <!-- FLOATING CONTROL BAR (Nằm trên Gradio iframe, luôn hiện để người dùng bấm nút) -->
   <div id="floating-top-bar">
     <!-- Status Indicator -->
-    <div class="status-pill" id="btnStatusPill" title="Bấm để kiểm tra lại trạng thái Backend">
+    <div class="status-pill" id="btnStatusPill" title="Bấm để kiểm tra lại trạng thái API Model">
       <span class="status-dot pulsing" id="topStatusDot"></span>
       <span id="topStatusText">Đang kiểm tra Model...</span>
     </div>
 
-    <!-- Nút Kết Nối API Model (Gọi Kaggle API) -->
-    <button id="btnConnectApiTop" class="btn-action btn-primary-glow" title="Gọi Kaggle API để tự động chạy notebook và các cell">
+    <!-- Nút Kết Nối API Model -->
+    <button id="btnConnectApiTop" class="btn-action btn-primary-glow" title="Khởi động và kết nối API Model">
       <i class="fa-solid fa-bolt"></i>
       <span id="btnConnectApiTopText">Kết nối API Model</span>
     </button>
 
     <!-- Nút Tải lại Iframe -->
-    <button id="btnReloadFrame" class="btn-icon-only" title="Tải lại giao diện Model Gradio">
+    <button id="btnReloadFrame" class="btn-icon-only" title="Tải lại giao diện Model">
       <i class="fa-solid fa-arrows-rotate"></i>
     </button>
 
     <!-- Nút Cài đặt API -->
-    <button id="btnOpenSettings" class="btn-icon-only" title="Cấu hình Kaggle API Token & Ngrok URL">
+    <button id="btnOpenSettings" class="btn-icon-only" title="Cấu hình API Model & Endpoint URL">
       <i class="fa-solid fa-gear"></i>
     </button>
   </div>
@@ -579,41 +579,41 @@
       
       <div class="status-text">AI Urban Flood & Traffic Monitor</div>
       <div class="sub-text" id="overlaySubText">
-        Hệ thống AI giám sát độ sâu ngập lụt đô thị và lưu lượng giao thông (Kaggle GPU Tesla T4).
+        Hệ thống AI giám sát độ sâu ngập lụt đô thị và lưu lượng giao thông.
       </div>
 
       <!-- Nút Kết Nối API Model Chính -->
       <button id="btnConnectApiOverlay" class="btn-connect-large">
         <i class="fa-solid fa-bolt"></i>
-        <span id="btnConnectApiOverlayText">KẾT NỐI API MODEL (KAGGLE GPU)</span>
+        <span id="btnConnectApiOverlayText">KẾT NỐI API MODEL</span>
       </button>
 
-      <!-- Các Bước Thực Thi Khi Chạy Kaggle API -->
+      <!-- Các Bước Thực Thi Khi Chạy API Model -->
       <div class="steps-container" id="stepsContainer">
         <div class="step-item" id="step-1">
           <div class="step-icon"><i class="fa-solid fa-circle"></i></div>
-          <div class="step-desc">1. Gửi lệnh Kaggle API chạy notebook (SaveKernel)...</div>
+          <div class="step-desc">1. Khởi tạo phiên làm việc API Model...</div>
         </div>
         <div class="step-item" id="step-2">
           <div class="step-icon"><i class="fa-solid fa-circle"></i></div>
-          <div class="step-desc">2. Kaggle cấp phát GPU Tesla T4 (Queued / Running)...</div>
+          <div class="step-desc">2. Cấp phát tài nguyên máy chủ Model...</div>
         </div>
         <div class="step-item" id="step-3">
           <div class="step-icon"><i class="fa-solid fa-circle"></i></div>
-          <div class="step-desc">3. Thực thi các cell: Cài đặt thư viện & Nạp model YOLOv8...</div>
+          <div class="step-desc">3. Nạp trọng số mô hình AI & tối ưu hóa...</div>
         </div>
         <div class="step-item" id="step-4">
           <div class="step-icon"><i class="fa-solid fa-circle"></i></div>
-          <div class="step-desc">4. Mở đường truyền Ngrok & Khởi động Gradio App...</div>
+          <div class="step-desc">4. Thiết lập kết nối API Model & giao diện...</div>
         </div>
       </div>
 
-      <!-- Fallback Terminal Command -->
+      <!-- Fallback Command -->
       <div class="cmd-badge-wrapper" id="cmdBadgeWrapper">
-        <span style="font-size: 12px; color: #64748b;">Hoặc khởi động từ Terminal của bạn:</span>
+        <span style="font-size: 12px; color: #64748b;">Khởi động nhanh từ Terminal:</span>
         <div class="cmd-badge">
           <i class="fa-solid fa-terminal" style="font-size: 10px;"></i>
-          <code>start-gpu</code>
+          <code>start-model</code>
         </div>
       </div>
 
@@ -625,13 +625,13 @@
         </button>
         <a id="btnOpenNgrokTab" href="https://hush-harmless-erased.ngrok-free.dev" target="_blank" class="btn-action" style="background: rgba(255,255,255,0.08); color: #cbd5e1; text-decoration: none; justify-content: center; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
-          <span>Tab Mới (Ngrok)</span>
+          <span>Mở Tab Riêng</span>
         </a>
       </div>
     </div>
   </div>
 
-  <!-- 100% Giao diện nguyên bản SYNEXAN/AI-Urban-Flood-Traffic từ Gradio Backend -->
+  <!-- Giao diện nguyên bản từ Model Backend -->
   <iframe 
     id="app-frame" 
     src="https://hush-harmless-erased.ngrok-free.dev" 
@@ -639,12 +639,12 @@
     title="AI Urban Flood & Traffic Congestion Monitor">
   </iframe>
 
-  <!-- MODAL: CẤU HÌNH KAGGLE API & BACKEND -->
+  <!-- MODAL: CẤU HÌNH API MODEL -->
   <div id="settings-modal">
     <div class="modal-box">
       <div class="modal-header">
         <div class="modal-title">
-          <i class="fa-solid fa-sliders" style="color: #3b82f6;"></i> Cấu hình Kaggle API Model
+          <i class="fa-solid fa-sliders" style="color: #3b82f6;"></i> Cấu hình API Model
         </div>
         <button id="btnCloseSettings" class="btn-close-modal">
           <i class="fa-solid fa-xmark"></i>
@@ -652,24 +652,24 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Kaggle API Bearer Token</label>
-        <input type="password" id="inputKaggleToken" class="form-input" placeholder="KGAT_xxxxxxxxxxxxxxxxxxxxxxxx">
-        <div class="form-tip">Token cá nhân từ tài khoản Kaggle của bạn (dùng để xác thực API đẩy và chạy notebook).</div>
+        <label class="form-label">API Model Key / Token</label>
+        <input type="password" id="inputKaggleToken" class="form-input" placeholder="Nhập API Token của bạn...">
+        <div class="form-tip">Mã khóa xác thực dùng để kích hoạt máy chủ API Model.</div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Kaggle Username & Kernel Slug</label>
+        <label class="form-label">Tài khoản & Định danh Model</label>
         <div style="display: flex; gap: 8px;">
-          <input type="text" id="inputKaggleUser" class="form-input" placeholder="nguynvlun" style="flex: 1;">
-          <input type="text" id="inputKaggleSlug" class="form-input" placeholder="floodkaggleapi" style="flex: 1.2;">
+          <input type="text" id="inputKaggleUser" class="form-input" placeholder="username" style="flex: 1;">
+          <input type="text" id="inputKaggleSlug" class="form-input" placeholder="model-id" style="flex: 1.2;">
         </div>
-        <div class="form-tip">Định danh Notebook trên Kaggle: <code>username/kernel-slug</code></div>
+        <div class="form-tip">Định danh máy chủ: <code>username/model-id</code></div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Ngrok Backend URL (Gradio App)</label>
+        <label class="form-label">Endpoint URL (Giao diện API Model)</label>
         <input type="url" id="inputNgrokUrl" class="form-input" placeholder="https://hush-harmless-erased.ngrok-free.dev">
-        <div class="form-tip">URL công khai từ Ngrok do notebook sinh ra ở cell khởi chạy Gradio.</div>
+        <div class="form-tip">Đường dẫn máy chủ trực tiếp kết nối tới mô hình.</div>
       </div>
 
       <div class="modal-actions">
@@ -777,16 +777,16 @@
       if (state === "online") {
         isServerOnline = true;
         topStatusDot.classList.add("online");
-        topStatusText.textContent = text || "Model GPU: Online";
+        topStatusText.textContent = text || "API Model: Online";
         btnConnectApiTopText.textContent = "Chạy lại Model";
       } else if (state === "running" || state === "connecting") {
         isServerOnline = false;
         topStatusDot.classList.add("pulsing");
-        topStatusText.textContent = text || "Đang chạy Kaggle...";
+        topStatusText.textContent = text || "Đang kết nối API...";
       } else {
         isServerOnline = false;
         topStatusDot.classList.add("offline");
-        topStatusText.textContent = text || "Model GPU: Offline";
+        topStatusText.textContent = text || "API Model: Offline";
         btnConnectApiTopText.textContent = "Kết nối API Model";
       }
     }
@@ -824,7 +824,7 @@
     }
 
     // ========================================================================
-    // KIỂM TRA ONLINE BACKEND NGROK & KAGGLE GPU
+    // KIỂM TRA ONLINE BACKEND API MODEL
     // ========================================================================
     async function checkBackendOnline() {
       if (isExecutingKernel) return;
@@ -844,10 +844,10 @@
         if (res.ok) {
           const data = await res.json();
           if (data.status === "RUNNING") {
-            updateStatusUI("online", "Model GPU Online (Tesla T4)");
+            updateStatusUI("online", "API Model: Online");
             return true;
           } else {
-            updateStatusUI("offline", "Model GPU: Offline");
+            updateStatusUI("offline", "API Model: Offline");
             showOverlay();
             return false;
           }
@@ -859,17 +859,17 @@
     }
 
     // ========================================================================
-    // GỌI KAGGLE API ĐỂ CHẠY NOTEBOOK TỰ ĐỘNG (THỰC THI CÁC CELL)
+    // GỌI KHỞI ĐỘNG VÀ KẾT NỐI API MODEL
     // ========================================================================
     async function startKaggleNotebookExecution() {
       if (isExecutingKernel) {
-        showToast("Hệ thống đang tiến hành kích hoạt GPU trên Kaggle...", "info");
+        showToast("Hệ thống đang tiến hành kích hoạt API Model...", "info");
         return;
       }
 
       const config = getConfig();
       if (!config.token) {
-        showToast("Vui lòng cấu hình Kaggle API Token trước!", "error");
+        showToast("Vui lòng cấu hình Token API Model trước!", "error");
         openSettingsModal();
         return;
       }
@@ -878,21 +878,21 @@
       btnConnectApiTop.disabled = true;
       btnConnectApiOverlay.disabled = true;
       btnConnectApiTopText.textContent = "Đang kích hoạt...";
-      btnConnectApiOverlayText.textContent = "ĐANG GỌI KAGGLE API...";
+      btnConnectApiOverlayText.textContent = "ĐANG KẾT NỐI API MODEL...";
 
       showOverlay();
       stepsContainer.style.display = "block";
       cmdBadgeWrapper.style.display = "none";
-      overlaySubText.textContent = "Đang kết nối tới máy chủ Kaggle API để cấp phát GPU Tesla T4 và nạp mô hình...";
+      overlaySubText.textContent = "Đang kết nối tới máy chủ API Model và nạp dữ liệu...";
 
       // Reset các bước
-      updateStep(1, "running", "1. Gửi lệnh Kaggle API chạy notebook (SaveKernel)...");
-      updateStep(2, "", "2. Kaggle cấp phát GPU Tesla T4 (Queued / Running)...");
-      updateStep(3, "", "3. Thực thi các cell: Cài đặt thư viện & Nạp model YOLOv8...");
-      updateStep(4, "", "4. Mở đường truyền Ngrok & Khởi động Gradio App...");
+      updateStep(1, "running", "1. Khởi tạo phiên làm việc API Model...");
+      updateStep(2, "", "2. Cấp phát tài nguyên máy chủ Model...");
+      updateStep(3, "", "3. Nạp trọng số mô hình AI & tối ưu hóa...");
+      updateStep(4, "", "4. Thiết lập kết nối API Model & giao diện...");
       updateStatusUI("running", "Đang gửi lệnh API...");
 
-      // Kiểm tra trước: Nếu Kaggle GPU đang chạy sẵn (RUNNING), kết nối ngay mà không kill phiên cũ
+      // Kiểm tra trước: Nếu API Model đang chạy sẵn (RUNNING), kết nối ngay mà không kill phiên cũ
       try {
         const preCheck = await fetch("https://api.kaggle.com/v1/kernels.KernelsApiService/GetKernelSessionStatus", {
           method: "POST",
@@ -905,10 +905,10 @@
         if (preCheck.ok) {
           const preData = await preCheck.json();
           if (preData.status === "RUNNING") {
-            showToast("Phát hiện Kaggle GPU đang chạy sẵn! Đang kết nối trực tiếp...", "info");
-            updateStep(1, "done", "1. Notebook Kaggle GPU đang chạy sẵn (RUNNING)!");
-            updateStep(2, "done", "2. Đã có GPU Tesla T4!");
-            updateStep(3, "running", "3. Đang đồng bộ giao diện Gradio...");
+            showToast("Phát hiện API Model đang sẵn sàng! Đang kết nối...", "info");
+            updateStep(1, "done", "1. Phiên làm việc API Model đã sẵn sàng!");
+            updateStep(2, "done", "2. Tài nguyên máy chủ đã được cấp phát!");
+            updateStep(3, "running", "3. Đang đồng bộ giao diện API Model...");
             frame.src = config.ngrok;
             startMonitorExecution(config);
             return;
@@ -917,7 +917,7 @@
       } catch (e) {}
 
       try {
-        // Bước 1: Tải tệp Notebook
+        // Bước 1: Tải tệp cấu hình Notebook
         let nbJson = null;
         try {
           const res = await fetch(DEFAULT_CONFIG.notebookUrl);
@@ -929,7 +929,7 @@
           nbJson = await resFallback.json();
         }
 
-        // Xóa output cũ và format source thành chuỗi (chuẩn Kaggle API)
+        // Xóa output cũ và format source thành chuỗi (chuẩn API)
         if (nbJson && Array.isArray(nbJson.cells)) {
           nbJson.cells.forEach(cell => {
             if (cell.cell_type === "code") {
@@ -953,7 +953,7 @@
           enableInternet: true
         };
 
-        // Gọi endpoint chính thức của Kaggle Kernels API để Lưu & Chạy toàn bộ các cells
+        // Gọi endpoint để Lưu & Chạy toàn bộ mô hình
         const kaggleRes = await fetch("https://api.kaggle.com/v1/kernels.KernelsApiService/SaveKernel", {
           method: "POST",
           headers: {
@@ -965,25 +965,25 @@
 
         if (!kaggleRes.ok) {
           const errText = await kaggleRes.text();
-          throw new Error(`Kaggle API lỗi (HTTP ${kaggleRes.status}): ${errText}`);
+          throw new Error(`API Model lỗi (HTTP ${kaggleRes.status}): ${errText}`);
         }
 
         const result = await kaggleRes.json();
         if (result.error) {
-          throw new Error(`Kaggle báo lỗi: ${result.error}`);
+          throw new Error(`API Model báo lỗi: ${result.error}`);
         }
 
         const ver = result.versionNumber || "mới";
-        updateStep(1, "done", `1. Đã gửi lệnh thành công lên Kaggle (Phiên bản #${ver})!`);
-        updateStep(2, "running", "2. Kaggle đang cấp phát GPU Tesla T4...");
-        updateStatusUI("running", "GPU đang khởi tạo...");
-        showToast("Đã kích hoạt Kaggle Notebook thành công!", "success");
+        updateStep(1, "done", `1. Đã khởi tạo phiên API Model thành công (Phiên bản #${ver})!`);
+        updateStep(2, "running", "2. Đang phân bổ tài nguyên máy chủ...");
+        updateStatusUI("running", "API Model đang khởi tạo...");
+        showToast("Đã kích hoạt API Model thành công!", "success");
 
         // Bước 2 & 3: Polling trạng thái Session & Ngrok
         startMonitorExecution(config);
 
       } catch (err) {
-        console.error("Lỗi khởi chạy Kaggle Notebook:", err);
+        console.error("Lỗi khởi chạy API Model:", err);
         updateStep(1, "error", `1. Lỗi: ${err.message}`);
         updateStatusUI("offline", "Kích hoạt thất bại");
         showToast(err.message, "error");
@@ -997,7 +997,7 @@
       }
     }
 
-    // Theo dõi tiến trình thực thi của Kaggle và phát hiện khi Gradio mở cổng
+    // Theo dõi tiến trình thực thi của máy chủ và phát hiện khi mở cổng dịch vụ
     function startMonitorExecution(config) {
       if (monitorTimer) clearInterval(monitorTimer);
       let seconds = 0;
@@ -1006,7 +1006,7 @@
       monitorTimer = setInterval(async () => {
         seconds += 3;
 
-        // 1. Kiểm tra trạng thái Session trên Kaggle
+        // 1. Kiểm tra trạng thái Session trên máy chủ
         try {
           const statusRes = await fetch("https://api.kaggle.com/v1/kernels.KernelsApiService/GetKernelSessionStatus", {
             method: "POST",
@@ -1022,22 +1022,21 @@
             const kStatus = data.status; // "QUEUED", "RUNNING", "COMPLETE"
 
             if (kStatus === "RUNNING") {
-              updateStep(2, "done", "2. Đã cấp phát GPU Tesla T4 thành công (RUNNING)!");
-              updateStep(3, "running", `3. Đang thực thi các cell: Cài thư viện & Nạp model AI (${seconds}s)...`);
+              updateStep(2, "done", "2. Đã cấp phát tài nguyên máy chủ thành công!");
+              updateStep(3, "running", `3. Đang thực thi nạp mô hình AI (${seconds}s)...`);
             } else if (kStatus === "QUEUED") {
-              updateStep(2, "running", `2. Đang chờ xếp hàng cấp GPU Tesla T4 (${seconds}s)...`);
+              updateStep(2, "running", `2. Đang chờ xếp hàng phân bổ tài nguyên (${seconds}s)...`);
             }
           }
         } catch (e) {}
 
-        // 2. Kiểm tra xem Ngrok backend đã phản hồi Gradio chưa (Sử dụng mode: no-cors để tránh lỗi CORS chặn trên trình duyệt)
+        // 2. Kiểm tra xem backend đã phản hồi chưa
         let isOnline = false;
         try {
           await fetch(`${config.ngrok}/`, {
             mode: "no-cors",
             headers: { "ngrok-skip-browser-warning": "true" }
           });
-          // Nếu fetch no-cors không văng lỗi mạng và đã chạy đủ thời gian nạp ban đầu
           if (seconds >= 15) {
             isOnline = true;
           }
@@ -1045,14 +1044,14 @@
 
         if (isOnline) {
           clearInterval(monitorTimer);
-          updateStep(3, "done", "3. Đã chạy xong toàn bộ các cell nạp mô hình!");
-          updateStep(4, "done", "4. Kết nối Ngrok & Gradio App thành công!");
-          updateStatusUI("online", "Model GPU Online (Tesla T4)");
+          updateStep(3, "done", "3. Đã nạp thành công mô hình AI!");
+          updateStep(4, "done", "4. Thiết lập kết nối API Model thành công!");
+          updateStatusUI("online", "API Model: Online");
 
-          overlaySubText.textContent = "🎉 Kết nối máy chủ AI thành công! Đang nạp giao diện...";
-          showToast("Server GPU đã online! Đang mở giao diện...", "success");
+          overlaySubText.textContent = "🎉 Kết nối máy chủ API Model thành công! Đang nạp giao diện...";
+          showToast("API Model đã online! Đang mở giao diện...", "success");
 
-          // Nạp lại iframe với URL ngrok mới nhất
+          // Nạp lại iframe với URL mới nhất
           frame.src = config.ngrok;
 
           setTimeout(() => {
@@ -1061,7 +1060,7 @@
             btnConnectApiTop.disabled = false;
             btnConnectApiOverlay.disabled = false;
             btnConnectApiTopText.textContent = "Chạy lại Model";
-            btnConnectApiOverlayText.textContent = "KẾT NỐI API MODEL (KAGGLE GPU)";
+            btnConnectApiOverlayText.textContent = "KẾT NỐI API MODEL";
             cmdBadgeWrapper.style.display = "flex";
           }, 1200);
           return;
@@ -1075,7 +1074,7 @@
           btnConnectApiOverlay.disabled = false;
           btnConnectApiTopText.textContent = "Thử lại API";
           btnConnectApiOverlayText.textContent = "KẾT NỐI LẠI API MODEL";
-          updateStep(4, "error", "4. Quá thời gian chờ (4 phút). Vui lòng thử lại hoặc gõ 'start-gpu' ở máy.");
+          updateStep(4, "error", "4. Quá thời gian chờ (4 phút). Vui lòng thử lại hoặc kiểm tra kết nối API.");
           cmdBadgeWrapper.style.display = "flex";
           showToast("Quá thời gian kết nối. Vui lòng kiểm tra lại.", "error");
         }
@@ -1143,9 +1142,9 @@
 
         if (res.ok) {
           const data = await res.json();
-          showToast(`Kaggle API kết nối tốt! Trạng thái hiện tại: ${data.status || 'READY'}`, "success");
+          showToast(`API Model kết nối tốt! Trạng thái hiện tại: ${data.status || 'READY'}`, "success");
         } else {
-          showToast(`Kaggle API trả về HTTP ${res.status}. Vui lòng kiểm tra lại Token!`, "error");
+          showToast(`API Model trả về HTTP ${res.status}. Vui lòng kiểm tra lại Token!`, "error");
         }
       } catch (err) {
         showToast(`Lỗi kết nối: ${err.message}`, "error");
@@ -1166,20 +1165,20 @@
       btnEnterAppDirectly.addEventListener("click", () => {
         const config = getConfig();
         frame.src = config.ngrok;
-        updateStatusUI("online", "Model GPU (Đang mở)");
+        updateStatusUI("online", "API Model (Đang mở)");
         hideOverlay();
-        showToast("Đang mở trực tiếp giao diện Gradio...", "info");
+        showToast("Đang mở trực tiếp giao diện Model...", "info");
       });
     }
 
     btnReloadFrame.addEventListener("click", () => {
       const config = getConfig();
       frame.src = config.ngrok;
-      showToast("Đang tải lại giao diện Gradio...", "info");
+      showToast("Đang tải lại giao diện Model...", "info");
     });
 
     btnStatusPill.addEventListener("click", () => {
-      showToast("Đang làm mới trạng thái kết nối Backend...", "info");
+      showToast("Đang làm mới trạng thái kết nối API Model...", "info");
       checkBackendOnline();
     });
 
